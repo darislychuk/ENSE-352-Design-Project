@@ -1,0 +1,722 @@
+user1B	
+		LDR R6,= GPIOB_IDR	;Port B 9
+		LDR R2,[R6]
+		LSR R2,#8
+		AND R0,R2,#0x73		;;Testing if no buttons are pushed
+		CMP R0,#0x73
+		BEQ user2B
+		AND R0,R2,#0x2		;;Testing if button 2 is pushed
+		CMP R0,#0x2
+		BEQ losingLeds		
+		AND R0,R2,#0x10		;;Testing if button 4 is pushed
+		CMP R0,#0x10
+		BEQ losingLeds
+		AND R0,R2,#0x20		;;Testing if button 3 is pushed
+		CMP R0,#0x20
+		BEQ losingLeds
+		
+		AND R0,R2,#0x1		;;Testing if button 1 (the correct button) is pushed
+		CMP R0,#0x1
+		BEQ randomLoop
+
+		
+user2B			
+		LDR R6,= GPIOB_IDR	;Port B 9
+		LDR R2,[R6]
+		LSR R2,#8
+		AND R0,R2,#0x73		;;Testing if no buttons are pushed
+		CMP R0,#0x73
+		BEQ user2B
+		AND R0,R2,#0x1		;;Testing if button 1 is pushed
+		CMP R0,#0x1
+		BEQ losingLeds		
+		AND R0,R2,#0x10		;;Testing if button 4 is pushed
+		CMP R0,#0x10
+		BEQ losingLeds
+		AND R0,R2,#0x20		;;Testing if button 3 is pushed
+		CMP R0,#0x20
+		BEQ losingLeds
+		
+		AND R0,R2,#0x2		;;Testing if button 2(the correct button) is pushed
+		CMP R0,#0x2
+		BEQ randomLoop
+
+
+
+; GPIO Test program - Dave Duguid, 2011
+; Modified Trevor Douglas 2014
+; Author of Whack-A-Mole - Daris Lychuk
+; SID: 200361245
+; ENSE 352
+; December 6th, 2018
+;;; Directives
+            PRESERVE8
+            THUMB       
+
+        		 
+;;; Equates
+
+INITIAL_MSP	EQU		0x20001000	; Initial Main Stack Pointer Value
+
+
+;PORT A GPIO - Base Addr: 0x40010800
+GPIOA_CRL	EQU		0x40010800	; (0x00) Port Configuration Register for Px7 -> Px0
+GPIOA_CRH	EQU		0x40010804	; (0x04) Port Configuration Register for Px15 -> Px8
+GPIOA_IDR	EQU		0x40010808	; (0x08) Port Input Data Register
+GPIOA_ODR	EQU		0x4001080C	; (0x0C) Port Output Data Register
+GPIOA_BSRR	EQU		0x40010810	; (0x10) Port Bit Set/Reset Register
+GPIOA_BRR	EQU		0x40010814	; (0x14) Port Bit Reset Register
+GPIOA_LCKR	EQU		0x40010818	; (0x18) Port Configuration Lock Register
+
+;PORT B GPIO - Base Addr: 0x40010C00
+GPIOB_CRL	EQU		0x40010C00	; (0x00) Port Configuration Register for Px7 -> Px0
+GPIOB_CRH	EQU		0x40010C04	; (0x04) Port Configuration Register for Px15 -> Px8
+GPIOB_IDR	EQU		0x40010C08	; (0x08) Port Input Data Register
+GPIOB_ODR	EQU		0x40010C0C	; (0x0C) Port Output Data Register
+GPIOB_BSRR	EQU		0x40010C10	; (0x10) Port Bit Set/Reset Register
+GPIOB_BRR	EQU		0x40010C14	; (0x14) Port Bit Reset Register
+GPIOB_LCKR	EQU		0x40010C18	; (0x18) Port Configuration Lock Register
+
+;The onboard LEDS are on port C bits 8 and 9
+;PORT C GPIO - Base Addr: 0x40011000
+GPIOC_CRL	EQU		0x40011000	; (0x00) Port Configuration Register for Px7 -> Px0
+GPIOC_CRH	EQU		0x40011004	; (0x04) Port Configuration Register for Px15 -> Px8
+GPIOC_IDR	EQU		0x40011008	; (0x08) Port Input Data Register
+GPIOC_ODR	EQU		0x4001100C	; (0x0C) Port Output Data Register
+GPIOC_BSRR	EQU		0x40011010	; (0x10) Port Bit Set/Reset Register
+GPIOC_BRR	EQU		0x40011014	; (0x14) Port Bit Reset Register
+GPIOC_LCKR	EQU		0x40011018	; (0x18) Port Configuration Lock Register
+
+;Registers for configuring and enabling the clocks
+;RCC Registers - Base Addr: 0x40021000
+RCC_CR		EQU		0x40021000	; Clock Control Register
+RCC_CFGR	EQU		0x40021004	; Clock Configuration Register
+RCC_CIR		EQU		0x40021008	; Clock Interrupt Register
+RCC_APB2RSTR	EQU	0x4002100C	; APB2 Peripheral Reset Register
+RCC_APB1RSTR	EQU	0x40021010	; APB1 Peripheral Reset Register
+RCC_AHBENR	EQU		0x40021014	; AHB Peripheral Clock Enable Register
+
+RCC_APB2ENR	EQU		0x40021018	; APB2 Peripheral Clock Enable Register  -- Used
+
+RCC_APB1ENR	EQU		0x4002101C	; APB1 Peripheral Clock Enable Register
+RCC_BDCR	EQU		0x40021020	; Backup Domain Control Register
+RCC_CSR		EQU		0x40021024	; Control/Status Register
+RCC_CFGR2	EQU		0x4002102C	; Clock Configuration Register 2
+	
+RTC_CNTH	EQU		0x40002818	;Counter register
+
+
+; Times for delay routines
+        
+DELAYTIME	EQU		1;9000;1021		; (200 ms/24MHz PLL)
+ENDTIME	EQU		4000000		;0.5 second delay
+
+; Values for random number generator
+
+a			EQU		1664525
+c			EQU		1013904223
+
+; Vector Table Mapped to Address 0 at Reset
+            AREA    RESET, Data, READONLY
+            EXPORT  __Vectors
+
+__Vectors	DCD		INITIAL_MSP			; stack pointer value when stack is empty
+        	DCD		Reset_Handler		; reset vector
+			
+            AREA    MYCODE, CODE, READONLY
+			EXPORT	Reset_Handler
+			ENTRY
+
+Reset_Handler		PROC
+
+		BL GPIO_ClockInit
+		BL GPIO_init
+		
+		LDR R4, = 0x0
+		LDR R1, = 0x0
+		LDR R11, = 0x0
+	
+waitLoop
+		LDR R10, = DELAYTIME
+		
+		BL waitingLeds
+		
+		BL waitingButtons
+		
+		
+		LDR R6, = GPIOA_ODR
+		LDR R7,[R6]
+		EOR R7,#0xFFFFFFFF
+		AND R7,#0xFFFFE1FF			
+		ORR R7,#0x0000
+		EOR R7,#0xFFFFFFFF
+		STR R7,[R6]
+		CMP R3,#0xF
+		BEQ waitLoop		
+		
+		BL mainGame
+		
+userWaitLoop
+		CMP R3,#0xF
+		BEQ userWaitLoop
+		
+	
+mainLoop
+	;;how many turns youre going to do
+		BL winningLeds
+	
+		B	mainLoop
+		ENDP
+			
+
+			
+
+
+;;;;;;;;Subroutines ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	ALIGN
+delayCheck PROC
+	PUSH{R2}
+delayCheckLoop
+	
+	
+	CMP R2,#0					;compare R10 to 0 (delaytime function)
+	BLE doneDelayCheck			;branch to doneDelay routine so that it exits the delay loop
+	SUB R2,#1					;subtract r10 by 2
+	
+	LDR R3,=0x0
+		
+	LDR R6,= GPIOB_IDR	;Port B 8 and 9
+	LDR R0,[R6]
+	LDR R1,= 0x00000300
+	AND R0,R1
+	LSR R0,#8
+	ORR R3,R0
+		
+	LDR R6,= GPIOC_IDR	;Port C 12
+	LDR R0,[R6]
+	LDR R1,= 0x00001000
+	AND R0,R1
+	LSR R0,#10
+	ORR R3,R0
+		
+	LDR R6,= GPIOA_IDR	;Port A 5
+	LDR R0,[R6]
+	LDR R1,= 0x00000020
+	AND R0,R1
+	LSR R0,#2
+	ORR R3,R0
+	
+	CMP R3,#0xF
+	
+	BEQ delayCheckLoop				;branch back to the delayloop so the leds continue to flash
+	
+doneDelayCheck	
+	POP{R2}
+	
+	BX LR 
+	ENDP
+		
+	ALIGN
+delay3 PROC
+	PUSH{R10}
+delayLoop3
+	
+	
+	CMP R10,#0					;compare R10 to 0 (delaytime function)
+	BLE doneDelay3				;branch to doneDelay routine so that it exits the delay loop
+	SUB R10,#1					;subtract r10 by 2
+	
+	B delayLoop3				;branch back to the delayloop so the leds continue to flash
+	
+doneDelay3	
+	POP{R10}
+	;B buttonLoop
+	BX LR 
+	ENDP
+
+	ALIGN
+delay2 PROC
+	LDR R10, = 800000
+delayLoop2
+	
+	
+	CMP R10,#0					;compare R10 to 0 (delaytime function)
+	BLE doneDelay2				;branch to doneDelay routine so that it exits the delay loop
+	SUB R10,#1					;subtract r10 by 2
+	
+	B delayLoop2				;branch back to the delayloop so the leds continue to flash
+	
+doneDelay2	
+
+	BX LR 
+	ENDP
+	
+	ALIGN
+delay PROC
+	PUSH{R10}
+delayLoop
+	
+	
+	CMP R10,#0					;compare R10 to 0 (delaytime function)
+	BLE doneDelay				;branch to doneDelay routine so that it exits the delay loop
+	SUB R10,#1					;subtract r10 by 2
+	
+	B delayLoop					;branch back to the delayloop so the leds continue to flash
+	
+doneDelay	
+	POP{R10}
+	B buttonLoop
+	BX LR 
+	ENDP
+	
+;This routine will enable the clock for the Ports that you need	
+	ALIGN
+GPIO_ClockInit PROC
+
+	; Students to write.  Registers   .. RCC_APB2ENR
+	; ENEL 384 Pushbuttons: SW2(Red): PB8, SW3(Black): PB9, SW4(Blue): PC12 *****NEW for 2015**** SW5(Green): PA5
+	; ENEL 384 board LEDs: D1 - PA9, D2 - PA10, D3 - PA11, D4 - PA12
+	LDR R6,= RCC_APB2ENR		;load the clock address with offset into R0, address of the register
+	LDR R0,[R6]					;load the register address into a register that can compare the bits
+	ORR R0,#0x1C				;or R1 with bits 0001 and 0100 because you want bits 2 for port A and 4 for port C
+	STR R0,[R6]					;store the bits back into the register address
+	BX LR
+	ENDP
+		
+	
+	
+;This routine enables the GPIO for the LED's.  By default the I/O lines are input so we only need to configure for ouptut.
+	ALIGN
+GPIO_init  PROC
+	
+	; ENEL 384 board LEDs: D1 - PA9, D2 - PA10, D3 - PA11, D4 - PA12
+	LDR R6, = GPIOA_CRH
+	LDR R0,[R6]
+	LDR R1,= 0xFFF0000F
+	AND R0,R1
+	;STR R0,[R6]
+	LDR R1,= 0x00033330
+	ORR R0,R1
+	STR R0,[R6]
+	
+	
+    BX LR
+	ENDP
+		
+	ALIGN
+mainGame  PROC
+	LDR R12,=0x0
+	LDR R6, = GPIOA_ODR
+	LDR R7,[R6]
+	EOR R7,#0xFFFFFFFF
+	AND R7,#0xFFFFE1FF			
+	ORR R7,#0x0000
+	EOR R7,#0xFFFFFFFF
+	STR R7,[R6]
+	
+	LDR R10, = 400000
+	BL delay
+	
+randomLoop
+	LDR R2, = 400000
+	LDR R6, = GPIOA_ODR
+	LDR R7,[R6]
+	EOR R7,#0xFFFFFFFF
+	AND R7,#0xFFFFE1FF			
+	ORR R7,#0x0000
+	EOR R7,#0xFFFFFFFF
+	STR R7,[R6]
+	
+	CMP R12,#0xF
+	BEQ mainLoop
+	ADD R12,#0x1
+	SUB R10,#0xFFF
+	SUB R2,#0xFFF
+	LDR R8, = a
+	LDR R9, = c
+	MUL R8, R8, R5
+	ADD R8, R8, R9
+	LSR R8, #30
+	
+	
+	CMP R8, #0x00
+	BEQ random1
+	CMP R8, #0x01
+	BEQ random2
+	CMP R8, #0x02
+	BEQ random3
+	CMP R8, #0x03
+	BEQ random4
+random1
+	LDR R6, = GPIOA_ODR
+	LDR R7,[R6]
+	EOR R7,#0xFFFFFFFF
+	AND R7,#0xFFFFE1FF		
+	ORR R7,#0x0200
+	EOR R7,#0xFFFFFFFF
+	STR R7,[R6]
+	ADD R5, R5
+	PUSH{LR}
+	BL delayCheck
+	POP{LR}
+	CMP R3,#0xF
+	BNE user1B
+
+	BX LR
+	
+random2
+	LDR R6, = GPIOA_ODR
+	LDR R7,[R6]
+	EOR R7,#0xFFFFFFFF
+	AND R7,#0xFFFFE1FF			
+	ORR R7,#0x0400
+	EOR R7,#0xFFFFFFFF
+	STR R7,[R6]
+	ADD R5, R5
+	PUSH{LR}
+	BL delayCheck
+	POP{LR}
+	CMP R3,#0xF
+	BNE user2B
+
+	BX LR
+
+random3
+	LDR R6, = GPIOA_ODR
+	LDR R7,[R6]
+	EOR R7,#0xFFFFFFFF	
+	AND R7,#0xFFFFE1FF			
+	ORR R7,#0x0800
+	EOR R7,#0xFFFFFFFF	
+	STR R7,[R6]
+	ADD R5, R5
+	PUSH{LR}
+	BL delayCheck
+	POP{LR}
+	CMP R3,#0xF
+	BNE user3B
+
+	BX LR
+	
+random4
+	LDR R6, = GPIOA_ODR
+	LDR R7,[R6]					
+	EOR R7,#0xFFFFFFFF
+	AND R7,#0xFFFFE1FF			
+	ORR R7,#0x1000					;ORR R9 by the compliment of 0xC to turn the bits on(active low)
+	EOR R7,#0xFFFFFFFF
+	STR R7,[R6]
+	ADD R5, R5
+	PUSH{LR}
+	BL delayCheck
+	POP{LR}
+	CMP R3,#0xF
+	BNE user4B
+	
+	BX LR
+	B randomLoop
+
+
+user1B	
+		
+		LDR R3,=0x0
+		LDR R6,= GPIOB_IDR	;Port B 8 and 9
+		LDR R0,[R6]
+		LDR R1,= 0x00000100
+		AND R0,R1
+		LSR R0,#8
+		ORR R3,R0
+		CMP R3,#0x1
+		BEQ user1B
+		CMP R3,#0x0
+		BEQ randomLoop
+		BNE losingLeds
+
+		
+user2B			
+		LDR R3,=0x0
+		LDR R6,= GPIOB_IDR	;Port B 8 and 9
+		LDR R0,[R6]
+		LDR R1,= 0x00000200
+		AND R0,R1
+		LSR R0,#9
+		ORR R3,R0
+		CMP R3,#0x1
+		BEQ user2B
+		CMP R3,#0x0
+		BEQ randomLoop
+		BNE losingLeds
+
+		
+user3B	
+		LDR R3,=0x0
+		LDR R6,= GPIOC_IDR	;Port C 12
+		LDR R0,[R6]
+		LDR R1,= 0x00001000
+		AND R0,R1
+		LSR R0,#12
+		ORR R3,R0
+		CMP R3,#0x1
+		BEQ user3B
+		CMP R3,#0x0
+		BEQ randomLoop
+		BNE losingLeds
+
+		
+user4B	
+		LDR R3,=0x0
+		LDR R6,= GPIOA_IDR	;Port A 5
+		LDR R0,[R6]
+		LDR R1,= 0x00000020
+		AND R0,R1
+		LSR R0,#5
+		ORR R3,R0
+		CMP R3,#0x1
+		BEQ user4B
+		CMP R3,#0x0
+		BEQ randomLoop
+		BNE losingLeds
+
+doneRandom
+		BX LR
+		ENDP
+		
+	ALIGN
+losingLeds  PROC
+
+caseL1
+	LDR R6, = GPIOA_ODR
+	LDR R7,[R6]
+	EOR R7,#0xFFFFFFFF		;display user profficiency level here
+	AND R7,#0xFFFFE1FF		
+	ORR R7,R12
+	EOR R7,#0xFFFFFFFF
+	STR R7,[R6]
+	ADD R11, #0x1
+	
+	BL delay2
+	
+caseL2
+	LDR R6, = GPIOA_ODR
+	LDR R7,[R6]
+	EOR R7,#0xFFFFFFFF
+	AND R7,#0xFFFFE1FF			
+	ORR R7,#0xFFFFFFFF
+	EOR R7,#0xFFFFFFFF
+	STR R7,[R6]
+	LDR R11, =0x0
+	
+	BL delay2
+	
+    BX LR
+	ENDP		
+		
+	ALIGN
+winningLeds PROC
+	LDR R11, = 0x0
+	
+case1W
+	LDR R6, = GPIOA_ODR
+	LDR R7,[R6]
+	EOR R7,#0xFFFFFFFF
+	AND R7,#0xFFFFE1FF		
+	ORR R7,#0x1200
+	EOR R7,#0xFFFFFFFF
+	STR R7,[R6]
+	ADD R12, #0x1
+	BL delay2
+
+case2W
+	LDR R6, = GPIOA_ODR
+	LDR R7,[R6]
+	EOR R7,#0xFFFFFFFF
+	AND R7,#0xFFFFE1FF			
+	ORR R7,#0x0C00
+	EOR R7,#0xFFFFFFFF
+	STR R7,[R6]
+	LDR R12, =0xF
+	ADD R11,#0x1
+	BL delay2
+	CMP R11,#0x5
+	BNE case1W
+
+	
+case3W
+	LDR R6, = GPIOA_ODR
+	LDR R7,[R6]
+	EOR R7,#0xFFFFFFFF
+	AND R7,#0xFFFFE1FF			
+	ORR R7,#0xFFFFE1FF			;orr with whatever level they finished at
+	EOR R7,#0xFFFFFFFF
+	STR R7,[R6]
+		
+	BL delay2
+	LDR R10, = 0x3700		;approximately 1 minute delay if no buttons are pressed before returning to waiting(UC2) phase
+
+	LDR R6, = GPIOA_ODR
+	LDR R7,[R6]
+	EOR R7,#0xFFFFFFFF
+	AND R7,#0xFFFFE1FF			
+	ORR R7,#0xFFFFFFFF			;orr with whatever level they finished at
+	EOR R7,#0xFFFFFFFF
+	STR R7,[R6]
+case4W
+
+	SUB R10,#0x1
+	
+	BL delay3
+	
+	LDR R3,=0x0
+	
+	LDR R6,= GPIOB_IDR	;Port B 8 and 9
+	LDR R0,[R6]
+	LDR R1,= 0x00000300
+	AND R0,R1
+	LSR R0,#8
+	ORR R3,R0
+		
+	LDR R6,= GPIOC_IDR	;Port C 12
+	LDR R0,[R6]
+	LDR R1,= 0x00001000
+	AND R0,R1
+	LSR R0,#10
+	ORR R3,R0
+		
+	LDR R6,= GPIOA_IDR	;Port A 5
+	LDR R0,[R6]
+	LDR R1,= 0x00000020
+	AND R0,R1
+	LSR R0,#2
+	ORR R3,R0
+	
+	;BL delay2
+	CMP R3,#0xF
+
+	BNE waitLoop
+
+	CMP R10,#0x0
+	BNE case4W
+
+	B waitLoop
+	
+	BX LR
+	LTORG
+	ENDP
+		
+	ALIGN
+waitingLeds PROC
+		
+	ADD R5, #0x555
+	CMP R4, #0x0
+	BEQ case1
+	CMP R4, #0x1
+	BEQ case2
+	CMP R4, #0x2
+	BEQ case3
+	CMP R4, #0x3
+	BEQ case4
+case1
+	LDR R6, = GPIOA_ODR
+	LDR R7,[R6]
+	EOR R7,#0xFFFFFFFF
+	AND R7,#0xFFFFE1FF		
+	ORR R7,#0x0200
+	EOR R7,#0xFFFFFFFF
+	STR R7,[R6]
+	ADD R4, #0x1
+	
+	
+	;B delay
+	BX LR
+	
+case2
+	LDR R6, = GPIOA_ODR
+	LDR R7,[R6]
+	EOR R7,#0xFFFFFFFF
+	AND R7,#0xFFFFE1FF			
+	ORR R7,#0x0400
+	EOR R7,#0xFFFFFFFF
+	STR R7,[R6]
+	ADD R4, #0x1
+	
+	;B delay
+	BX LR
+
+case3
+	LDR R6, = GPIOA_ODR
+	LDR R7,[R6]
+	EOR R7,#0xFFFFFFFF	
+	AND R7,#0xFFFFE1FF			
+	ORR R7,#0x0800
+	EOR R7,#0xFFFFFFFF	
+	STR R7,[R6]
+	ADD R4, #0x1
+	
+	;B delay
+	BX LR
+	
+case4
+	LDR R6, = GPIOA_ODR
+	LDR R7,[R6]					
+	EOR R7,#0xFFFFFFFF
+	AND R7,#0xFFFFE1FF			;AND R9 by the compliment to clear all the bits
+	ORR R7,#0x1000					;ORR R9 by the compliment of 0xC to turn the bits on(active low)
+	EOR R7,#0xFFFFFFFF
+	STR R7,[R6]
+	LDR R4,= 0x0
+	
+	;B delay
+	
+	
+	BX LR
+	ENDP
+	
+	ALIGN
+waitingButtons PROC
+		PUSH{R10}
+buttonLoop
+		
+		
+		LDR R3,=0x0
+		
+		LDR R6,= GPIOB_IDR	;Port B 8 and 9
+		LDR R0,[R6]
+		LDR R1,= 0x00000300
+		AND R0,R1
+		LSR R0,#8
+		ORR R3,R0
+		
+		LDR R6,= GPIOC_IDR	;Port C 12
+		LDR R0,[R6]
+		LDR R1,= 0x00001000
+		AND R0,R1
+		LSR R0,#10
+		ORR R3,R0
+		
+		LDR R6,= GPIOA_IDR	;Port A 5
+		LDR R0,[R6]
+		LDR R1,= 0x00000020
+		AND R0,R1
+		LSR R0,#2
+		ORR R3,R0
+	
+		CMP R3,#0xF
+		;POP{R10}
+		BNE doneButtonLoop
+		
+		SUB R10,#1
+		CMP R10,#0
+		
+		BNE buttonLoop
+
+doneButtonLoop
+		POP{R10}
+		
+		
+				
+		BX LR
+		ENDP
+
+
+	ALIGN
+	END

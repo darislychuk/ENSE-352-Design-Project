@@ -1,0 +1,2072 @@
+
+
+
+ARM Macro Assembler    Page 1 
+
+
+    1 00000000         ; Author of Whack-A-Mole - Daris Lychuk
+    2 00000000         ; SID: 200361245
+    3 00000000         ; ENSE 352
+    4 00000000         ; December 6th, 2018
+    5 00000000         ;;; Directives
+    6 00000000                 PRESERVE8
+    7 00000000                 THUMB
+    8 00000000         
+    9 00000000         
+   10 00000000         ;;; Equates
+   11 00000000         
+   12 00000000 20001000 
+                       INITIAL_MSP
+                               EQU              0x20001000  ; Initial Main Stac
+                                                            k Pointer Value
+   13 00000000         
+   14 00000000         
+   15 00000000         ;PORT A GPIO - Base Addr: 0x40010800
+   16 00000000 40010800 
+                       GPIOA_CRL
+                               EQU              0x40010800  ; (0x00) Port Confi
+                                                            guration Register f
+                                                            or Px7 -> Px0
+   17 00000000 40010804 
+                       GPIOA_CRH
+                               EQU              0x40010804  ; (0x04) Port Confi
+                                                            guration Register f
+                                                            or Px15 -> Px8
+   18 00000000 40010808 
+                       GPIOA_IDR
+                               EQU              0x40010808  ; (0x08) Port Input
+                                                             Data Register
+   19 00000000 4001080C 
+                       GPIOA_ODR
+                               EQU              0x4001080C  ; (0x0C) Port Outpu
+                                                            t Data Register
+   20 00000000 40010810 
+                       GPIOA_BSRR
+                               EQU              0x40010810  ; (0x10) Port Bit S
+                                                            et/Reset Register
+   21 00000000 40010814 
+                       GPIOA_BRR
+                               EQU              0x40010814  ; (0x14) Port Bit R
+                                                            eset Register
+   22 00000000 40010818 
+                       GPIOA_LCKR
+                               EQU              0x40010818  ; (0x18) Port Confi
+                                                            guration Lock Regis
+                                                            ter
+   23 00000000         
+   24 00000000         ;PORT B GPIO - Base Addr: 0x40010C00
+   25 00000000 40010C00 
+                       GPIOB_CRL
+                               EQU              0x40010C00  ; (0x00) Port Confi
+                                                            guration Register f
+                                                            or Px7 -> Px0
+   26 00000000 40010C04 
+                       GPIOB_CRH
+                               EQU              0x40010C04  ; (0x04) Port Confi
+
+
+
+ARM Macro Assembler    Page 2 
+
+
+                                                            guration Register f
+                                                            or Px15 -> Px8
+   27 00000000 40010C08 
+                       GPIOB_IDR
+                               EQU              0x40010C08  ; (0x08) Port Input
+                                                             Data Register
+   28 00000000 40010C0C 
+                       GPIOB_ODR
+                               EQU              0x40010C0C  ; (0x0C) Port Outpu
+                                                            t Data Register
+   29 00000000 40010C10 
+                       GPIOB_BSRR
+                               EQU              0x40010C10  ; (0x10) Port Bit S
+                                                            et/Reset Register
+   30 00000000 40010C14 
+                       GPIOB_BRR
+                               EQU              0x40010C14  ; (0x14) Port Bit R
+                                                            eset Register
+   31 00000000 40010C18 
+                       GPIOB_LCKR
+                               EQU              0x40010C18  ; (0x18) Port Confi
+                                                            guration Lock Regis
+                                                            ter
+   32 00000000         
+   33 00000000         ;The onboard LEDS are on port C bits 8 and 9
+   34 00000000         ;PORT C GPIO - Base Addr: 0x40011000
+   35 00000000 40011000 
+                       GPIOC_CRL
+                               EQU              0x40011000  ; (0x00) Port Confi
+                                                            guration Register f
+                                                            or Px7 -> Px0
+   36 00000000 40011004 
+                       GPIOC_CRH
+                               EQU              0x40011004  ; (0x04) Port Confi
+                                                            guration Register f
+                                                            or Px15 -> Px8
+   37 00000000 40011008 
+                       GPIOC_IDR
+                               EQU              0x40011008  ; (0x08) Port Input
+                                                             Data Register
+   38 00000000 4001100C 
+                       GPIOC_ODR
+                               EQU              0x4001100C  ; (0x0C) Port Outpu
+                                                            t Data Register
+   39 00000000 40011010 
+                       GPIOC_BSRR
+                               EQU              0x40011010  ; (0x10) Port Bit S
+                                                            et/Reset Register
+   40 00000000 40011014 
+                       GPIOC_BRR
+                               EQU              0x40011014  ; (0x14) Port Bit R
+                                                            eset Register
+   41 00000000 40011018 
+                       GPIOC_LCKR
+                               EQU              0x40011018  ; (0x18) Port Confi
+                                                            guration Lock Regis
+                                                            ter
+   42 00000000         
+   43 00000000         ;Registers for configuring and enabling the clocks
+
+
+
+ARM Macro Assembler    Page 3 
+
+
+   44 00000000         ;RCC Registers - Base Addr: 0x40021000
+   45 00000000 40021000 
+                       RCC_CR  EQU              0x40021000  ; Clock Control Reg
+                                                            ister
+   46 00000000 40021004 
+                       RCC_CFGR
+                               EQU              0x40021004  ; Clock Configurati
+                                                            on Register
+   47 00000000 40021008 
+                       RCC_CIR EQU              0x40021008  ; Clock Interrupt R
+                                                            egister
+   48 00000000 4002100C 
+                       RCC_APB2RSTR
+                               EQU              0x4002100C  ; APB2 Peripheral R
+                                                            eset Register
+   49 00000000 40021010 
+                       RCC_APB1RSTR
+                               EQU              0x40021010  ; APB1 Peripheral R
+                                                            eset Register
+   50 00000000 40021014 
+                       RCC_AHBENR
+                               EQU              0x40021014  ; AHB Peripheral Cl
+                                                            ock Enable Register
+                                                            
+   51 00000000         
+   52 00000000 40021018 
+                       RCC_APB2ENR
+                               EQU              0x40021018  ; APB2 Peripheral C
+                                                            lock Enable Registe
+                                                            r  -- Used
+   53 00000000         
+   54 00000000 4002101C 
+                       RCC_APB1ENR
+                               EQU              0x4002101C  ; APB1 Peripheral C
+                                                            lock Enable Registe
+                                                            r
+   55 00000000 40021020 
+                       RCC_BDCR
+                               EQU              0x40021020  ; Backup Domain Con
+                                                            trol Register
+   56 00000000 40021024 
+                       RCC_CSR EQU              0x40021024  ; Control/Status Re
+                                                            gister
+   57 00000000 4002102C 
+                       RCC_CFGR2
+                               EQU              0x4002102C  ; Clock Configurati
+                                                            on Register 2
+   58 00000000         
+   59 00000000 40002818 
+                       RTC_CNTH
+                               EQU              0x40002818  ;Counter register
+   60 00000000         
+   61 00000000         
+   62 00000000         ; Times for delay routines
+   63 00000000         
+   64 00000000 00002328 
+                       DELAYTIME
+                               EQU              9000        ;1021  ; (200 ms/24
+                                                            MHz PLL)
+
+
+
+ARM Macro Assembler    Page 4 
+
+
+   65 00000000 003D0900 
+                       ENDTIME EQU              4000000     ;0.5 second delay
+   66 00000000         
+   67 00000000         ; Values for random number generator
+   68 00000000         
+   69 00000000 0019660D 
+                       a       EQU              1664525
+   70 00000000 3C6EF35F 
+                       c       EQU              1013904223
+   71 00000000         
+   72 00000000         ; Vector Table Mapped to Address 0 at Reset
+   73 00000000                 AREA             RESET, Data, READONLY
+   74 00000000                 EXPORT           __Vectors
+   75 00000000         
+   76 00000000 20001000 
+                       __Vectors
+                               DCD              INITIAL_MSP ; stack pointer val
+                                                            ue when stack is em
+                                                            pty
+   77 00000004 00000000        DCD              Reset_Handler ; reset vector
+   78 00000008         
+   79 00000008                 AREA             MYCODE, CODE, READONLY
+   80 00000000                 EXPORT           Reset_Handler
+   81 00000000                 ENTRY
+   82 00000000         
+   83 00000000         Reset_Handler
+                               PROC
+   84 00000000         
+   85 00000000 F7FF FFFE       BL               GPIO_ClockInit
+   86 00000004 F7FF FFFE       BL               GPIO_init
+   87 00000008         
+   88 00000008 F04F 0400       LDR              R4, = 0x0
+   89 0000000C F04F 0100       LDR              R1, = 0x0
+   90 00000010 F04F 0B00       LDR              R11, = 0x0
+   91 00000014         
+   92 00000014         waitLoop
+   93 00000014 F242 3A28       LDR              R10, = DELAYTIME
+   94 00000018         
+   95 00000018 F7FF FFFE       BL               waitingLeds
+   96 0000001C         
+   97 0000001C F7FF FFFE       BL               waitingButtons
+   98 00000020         
+   99 00000020         
+  100 00000020 4ECF            LDR              R6, = GPIOA_ODR
+  101 00000022 6837            LDR              R7,[R6]
+  102 00000024 F087 37FF       EOR              R7,#0xFFFFFFFF
+  103 00000028 F427 57F0       AND              R7,#0xFFFFE1FF
+  104 0000002C F047 0700       ORR              R7,#0x0000
+  105 00000030 F087 37FF       EOR              R7,#0xFFFFFFFF
+  106 00000034 6037            STR              R7,[R6]
+  107 00000036 2B0F            CMP              R3,#0xF
+  108 00000038 D0EC            BEQ              waitLoop
+  109 0000003A         
+  110 0000003A F7FF FFFE       BL               mainGame
+  111 0000003E         
+  112 0000003E         userWaitLoop
+  113 0000003E 2B0F            CMP              R3,#0xF
+  114 00000040 D0FD            BEQ              userWaitLoop
+  115 00000042         
+
+
+
+ARM Macro Assembler    Page 5 
+
+
+  116 00000042         
+  117 00000042         mainLoop
+  118 00000042 F7FF FFFE       BL               winningLeds
+  119 00000046         
+  120 00000046 E7FC            B                mainLoop
+  121 00000048                 ENDP
+  122 00000048         
+  123 00000048         
+  124 00000048         
+  125 00000048         ;;;;;;;;Subroutines ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                       ;;
+  126 00000048                 ALIGN
+  127 00000048         delay3  PROC
+  128 00000048 F84D AD04       PUSH{R10}
+  129 0000004C         delayLoop3
+  130 0000004C         
+  131 0000004C         
+  132 0000004C F1BA 0F00       CMP              R10,#0      ;compare R10 to 0 (
+                                                            delaytime function)
+                                                            
+  133 00000050 DD02            BLE              doneDelay3  ;branch to doneDela
+                                                            y routine so that i
+                                                            t exits the delay l
+                                                            oop
+  134 00000052 F1AA 0A01       SUB              R10,#1      ;subtract r10 by 2
+  135 00000056         
+  136 00000056 E7F9            B                delayLoop3  ;branch back to the
+                                                             delayloop so the l
+                                                            eds continue to fla
+                                                            sh
+  137 00000058         
+  138 00000058         doneDelay3
+  139 00000058 F85D AB04       POP{R10}
+  140 0000005C         ;B buttonLoop
+  141 0000005C 4770            BX               LR
+  142 0000005E                 ENDP
+  143 0000005E         
+  144 0000005E 00 00           ALIGN
+  145 00000060         delay2  PROC
+  146 00000060 F8DF A300       LDR              R10, = 800000
+  147 00000064         delayLoop2
+  148 00000064         
+  149 00000064         
+  150 00000064 F1BA 0F00       CMP              R10,#0      ;compare R10 to 0 (
+                                                            delaytime function)
+                                                            
+  151 00000068 DD02            BLE              doneDelay2  ;branch to doneDela
+                                                            y routine so that i
+                                                            t exits the delay l
+                                                            oop
+  152 0000006A F1AA 0A01       SUB              R10,#1      ;subtract r10 by 2
+  153 0000006E         
+  154 0000006E E7F9            B                delayLoop2  ;branch back to the
+                                                             delayloop so the l
+                                                            eds continue to fla
+                                                            sh
+  155 00000070         
+  156 00000070         doneDelay2
+  157 00000070         ;POP{R10}
+
+
+
+ARM Macro Assembler    Page 6 
+
+
+  158 00000070         ;B buttonLoop
+  159 00000070 4770            BX               LR
+  160 00000072                 ENDP
+  161 00000072         
+  162 00000072 00 00           ALIGN
+  163 00000074         delay   PROC
+  164 00000074 F84D AD04       PUSH{R10}
+  165 00000078         delayLoop
+  166 00000078         
+  167 00000078         
+  168 00000078 F1BA 0F00       CMP              R10,#0      ;compare R10 to 0 (
+                                                            delaytime function)
+                                                            
+  169 0000007C DD02            BLE              doneDelay   ;branch to doneDela
+                                                            y routine so that i
+                                                            t exits the delay l
+                                                            oop
+  170 0000007E F1AA 0A01       SUB              R10,#1      ;subtract r10 by 2
+  171 00000082         
+  172 00000082 E7F9            B                delayLoop   ;branch back to the
+                                                             delayloop so the l
+                                                            eds continue to fla
+                                                            sh
+  173 00000084         
+  174 00000084         doneDelay
+  175 00000084 F85D AB04       POP{R10}
+  176 00000088 E1C8            B                buttonLoop
+  177 0000008A 4770            BX               LR
+  178 0000008C                 ENDP
+  179 0000008C         
+  180 0000008C         ;This routine will enable the clock for the Ports that y
+                       ou need 
+  181 0000008C                 ALIGN
+  182 0000008C         GPIO_ClockInit
+                               PROC
+  183 0000008C         
+  184 0000008C         ; Students to write.  Registers   .. RCC_APB2ENR
+  185 0000008C         ; ENEL 384 Pushbuttons: SW2(Red): PB8, SW3(Black): PB9, 
+                       SW4(Blue): PC12 *****NEW for 2015**** SW5(Green): PA5
+  186 0000008C         ; ENEL 384 board LEDs: D1 - PA9, D2 - PA10, D3 - PA11, D
+                       4 - PA12
+  187 0000008C 4EB6            LDR              R6,= RCC_APB2ENR ;load the cloc
+                                                            k address with offs
+                                                            et into R0, address
+                                                             of the register
+  188 0000008E 6830            LDR              R0,[R6]     ;load the register 
+                                                            address into a regi
+                                                            ster that can compa
+                                                            re the bits
+  189 00000090 F040 001C       ORR              R0,#0x1C    ;or R1 with bits 00
+                                                            01 and 0100 because
+                                                             you want bits 2 fo
+                                                            r port A and 4 for 
+                                                            port C
+  190 00000094 6030            STR              R0,[R6]     ;store the bits bac
+                                                            k into the register
+                                                             address
+  191 00000096 4770            BX               LR
+  192 00000098                 ENDP
+
+
+
+ARM Macro Assembler    Page 7 
+
+
+  193 00000098         
+  194 00000098         
+  195 00000098         
+  196 00000098         ;This routine enables the GPIO for the LED's.  By defaul
+                       t the I/O lines are input so we only need to configure f
+                       or ouptut.
+  197 00000098                 ALIGN
+  198 00000098         GPIO_init
+                               PROC
+  199 00000098         
+  200 00000098         ; ENEL 384 board LEDs: D1 - PA9, D2 - PA10, D3 - PA11, D
+                       4 - PA12
+  201 00000098 4EB4            LDR              R6, = GPIOA_CRH
+  202 0000009A 6830            LDR              R0,[R6]
+  203 0000009C 49B4            LDR              R1,= 0xFFF0000F
+  204 0000009E EA00 0001       AND              R0,R1       ;Specify the LED bi
+                                                            ts that will be use
+                                                            d
+  205 000000A2 49B4            LDR              R1,= 0x00033330
+  206 000000A4 EA40 0001       ORR              R0,R1
+  207 000000A8 6030            STR              R0,[R6]
+  208 000000AA         
+  209 000000AA         
+  210 000000AA 4770            BX               LR
+  211 000000AC                 ENDP
+  212 000000AC         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                       ;;;;;;;;
+  213 000000AC         ;;; This is the main subroutine for my game. This is whe
+                       re the random LED is turned on and where the user must i
+                       nput the
+  214 000000AC         ;;; proper button in order to continue
+  215 000000AC         ;;; Require:
+  216 000000AC         ;;; R5: Counter to get a random generated number for the
+                        LED game sequence
+  217 000000AC         ;;; R6: Load in the Input address of the pushbuttons in 
+                       this register
+  218 000000AC         ;;; R7: Load in the value to clear and set certain LEDs
+  219 000000AC         ;;; R10: Used as delay loop register
+  220 000000AC         ;;; R12: Used as a register to count what round the user
+                        is at
+  221 000000AC         ;;; R9: Used as a register to store constant c
+  222 000000AC         ;;; R8: Used as a register to store constant a
+  223 000000AC         ;;; R2: Used as a register to decrement how much time th
+                       e user has to push the button before they are sent to th
+                       e end failure phase1
+  224 000000AC         ;;; Promise:
+  225 000000AC         ;;; returns a value in R6 which turns on one of the rand
+                       om LEDs and accepts user button input if it is the corre
+                       ct corresponding
+  226 000000AC         ;;; button to that LED. Also has a timer for how long th
+                       e user actually has to push a button for the light
+  227 000000AC         ;;;
+  228 000000AC         ;;; Modifies:
+  229 000000AC         ;;; R11, R7, R12, R10, R0, R1, R2, R3, R8, R9  
+  230 000000AC                 ALIGN
+  231 000000AC         mainGame
+                               PROC
+  232 000000AC F04F 0C00       LDR              R12,=0x0
+  233 000000B0 4EAB            LDR              R6, = GPIOA_ODR
+
+
+
+ARM Macro Assembler    Page 8 
+
+
+  234 000000B2 6837            LDR              R7,[R6]
+  235 000000B4 F087 37FF       EOR              R7,#0xFFFFFFFF ;Clear all bits 
+                                                            and set the LEDs of
+                                                            f
+  236 000000B8 F427 57F0       AND              R7,#0xFFFFE1FF
+  237 000000BC F047 0700       ORR              R7,#0x0000
+  238 000000C0 F087 37FF       EOR              R7,#0xFFFFFFFF
+  239 000000C4 6037            STR              R7,[R6]
+  240 000000C6         
+  241 000000C6 F8DF A2B0       LDR              R10, = 400000
+  242 000000CA F7FF FFFE       BL               delay
+  243 000000CE         
+  244 000000CE         randomLoop
+  245 000000CE 4EA4            LDR              R6, = GPIOA_ODR
+  246 000000D0 6837            LDR              R7,[R6]
+  247 000000D2 F087 37FF       EOR              R7,#0xFFFFFFFF
+  248 000000D6 F427 57F0       AND              R7,#0xFFFFE1FF ;Clear all bits 
+                                                            when the user press
+                                                            es the button for t
+                                                            he LED and set the 
+                                                            LEDs off
+  249 000000DA F047 0700       ORR              R7,#0x0000
+  250 000000DE F087 37FF       EOR              R7,#0xFFFFFFFF
+  251 000000E2 6037            STR              R7,[R6]
+  252 000000E4         
+  253 000000E4 F1BC 0F0F       CMP              R12,#0xF    ;Register to count 
+                                                            what level the play
+                                                            er is at
+  254 000000E8 D0AB            BEQ              mainLoop    ;If they hit 15 rou
+                                                            nds, branch to winn
+                                                            ingLEDs
+  255 000000EA F10C 0C01       ADD              R12,#0x1    ;Increment the leve
+                                                            l everytime the pla
+                                                            yer runs through
+  256 000000EE F6AA 7AFF       SUB              R10,#0xFFF  ;Subtract an amount
+                                                             from the delay
+  257 000000F2 F8DF 8288       LDR              R8, = a     ;Constant declared 
+                                                            above used for rand
+                                                            om LED equation
+  258 000000F6 F8DF 9288       LDR              R9, = c     ;Constant declared 
+                                                            above used for rand
+                                                            om LED equation
+  259 000000FA FB08 F805       MUL              R8, R8, R5  ;Part of random LED
+                                                             equation
+  260 000000FE 44C8            ADD              R8, R8, R9  ;Part of random LED
+                                                             equation
+  261 00000100 EA4F 7898       LSR              R8, #30     ;Take the two MSB f
+                                                            rom that random num
+                                                            ber to decide which
+                                                             LED to turn on
+  262 00000104         
+  263 00000104 F7FF FFFE       BL               delay2
+  264 00000108         
+  265 00000108 F1B8 0F00       CMP              R8, #0x00   ;Compare register R
+                                                            8 which contains th
+                                                            e 2 bits that are b
+                                                            eing looked at for 
+                                                            the random LED
+  266 0000010C D008            BEQ              random1
+
+
+
+ARM Macro Assembler    Page 9 
+
+
+  267 0000010E F1B8 0F01       CMP              R8, #0x01
+  268 00000112 D014            BEQ              random2
+  269 00000114 F1B8 0F02       CMP              R8, #0x02
+  270 00000118 D020            BEQ              random3
+  271 0000011A F1B8 0F03       CMP              R8, #0x03
+  272 0000011E D02C            BEQ              random4
+  273 00000120         random1
+  274 00000120 4E8F            LDR              R6, = GPIOA_ODR ;If you are her
+                                                            e it will turn the 
+                                                            first light on
+  275 00000122 6837            LDR              R7,[R6]
+  276 00000124 F087 37FF       EOR              R7,#0xFFFFFFFF
+  277 00000128 F427 57F0       AND              R7,#0xFFFFE1FF
+  278 0000012C F447 7700       ORR              R7,#0x0200  ;Clear and set the 
+                                                            bits wanted to turn
+                                                             on first LED
+  279 00000130 F087 37FF       EOR              R7,#0xFFFFFFFF
+  280 00000134 6037            STR              R7,[R6]
+  281 00000136 442D            ADD              R5, R5      ;Add R5(the random 
+                                                            value based on when
+                                                             the user presses t
+                                                            he first button) to
+                                                             itself
+  282 00000138 4A92            LDR              R2,=0x111111 ;Load a value into
+                                                             R2 that will be de
+                                                            cremented based on 
+                                                            the level the playe
+                                                            r is on, this is us
+                                                            ed for how long the
+                                                             LED stays on
+  283 0000013A E02E            B                user1B      ;Branch to correspo
+                                                            nding button check 
+                                                            based on LED
+  284 0000013C         
+  285 0000013C 4770            BX               LR
+  286 0000013E         
+  287 0000013E         random2
+  288 0000013E 4E88            LDR              R6, = GPIOA_ODR ;If you are her
+                                                            e it will turn the 
+                                                            second light on
+  289 00000140 6837            LDR              R7,[R6]
+  290 00000142 F087 37FF       EOR              R7,#0xFFFFFFFF
+  291 00000146 F427 57F0       AND              R7,#0xFFFFE1FF
+  292 0000014A F447 6780       ORR              R7,#0x0400  ;Clear and set the 
+                                                            bits wanted to turn
+                                                             on second LED
+  293 0000014E F087 37FF       EOR              R7,#0xFFFFFFFF
+  294 00000152 6037            STR              R7,[R6]
+  295 00000154 442D            ADD              R5, R5      ;Add R5(the random 
+                                                            value based on when
+                                                             the user presses t
+                                                            he first button) to
+                                                             itself
+  296 00000156 4A8B            LDR              R2,=0x111111 ;If wanting an eas
+                                                            ier time playing th
+                                                            e game but still so
+                                                            mewhat challenging,
+                                                             change the value t
+                                                            o 0xFFFFF
+
+
+
+ARM Macro Assembler    Page 10 
+
+
+  297 00000158 E033            B                user2B      ;Branch to correspo
+                                                            nding button check 
+                                                            based on LED
+  298 0000015A         
+  299 0000015A 4770            BX               LR
+  300 0000015C         
+  301 0000015C         random3
+  302 0000015C 4E80            LDR              R6, = GPIOA_ODR ;If you are her
+                                                            e it will turn the 
+                                                            third light on
+  303 0000015E 6837            LDR              R7,[R6]
+  304 00000160 F087 37FF       EOR              R7,#0xFFFFFFFF
+  305 00000164 F427 57F0       AND              R7,#0xFFFFE1FF
+  306 00000168 F447 6700       ORR              R7,#0x0800  ;Clear and set the 
+                                                            bits wanted to turn
+                                                             on third LED
+  307 0000016C F087 37FF       EOR              R7,#0xFFFFFFFF
+  308 00000170 6037            STR              R7,[R6]
+  309 00000172 442D            ADD              R5, R5      ;Add R5(the random 
+                                                            value based on when
+                                                             the user presses t
+                                                            he first button) to
+                                                             itself
+  310 00000174 4A83            LDR              R2,=0x111111
+  311 00000176 E039            B                user3B      ;Branch to correspo
+                                                            nding button check 
+                                                            based on LED
+  312 00000178         
+  313 00000178 4770            BX               LR
+  314 0000017A         
+  315 0000017A         random4
+  316 0000017A 4E79            LDR              R6, = GPIOA_ODR ;If you are her
+                                                            e it will turn the 
+                                                            fourth light on
+  317 0000017C 6837            LDR              R7,[R6]
+  318 0000017E F087 37FF       EOR              R7,#0xFFFFFFFF
+  319 00000182 F427 57F0       AND              R7,#0xFFFFE1FF
+  320 00000186 F447 5780       ORR              R7,#0x1000  ;Clear and set the 
+                                                            bits wanted to turn
+                                                             on fourth LED
+  321 0000018A F087 37FF       EOR              R7,#0xFFFFFFFF
+  322 0000018E 6037            STR              R7,[R6]
+  323 00000190 442D            ADD              R5, R5      ;Add R5(the random 
+                                                            value based on when
+                                                             the user presses t
+                                                            he first button) to
+                                                             itself
+  324 00000192 4A7C            LDR              R2,=0x111111
+  325 00000194 E03F            B                user4B      ;Branch to correspo
+                                                            nding button check 
+                                                            based on LED
+  326 00000196         
+  327 00000196 4770            BX               LR
+  328 00000198 E799            B                randomLoop
+  329 0000019A         
+  330 0000019A         user1B
+  331 0000019A EBA2 020C       SUB              R2,R12      ;Subtract register 
+                                                            with initial value 
+                                                            by the level value 
+
+
+
+ARM Macro Assembler    Page 11 
+
+
+                                                            the player is on
+  332 0000019E 2A00            CMP              R2,#0x0     ;If this value reac
+                                                            hes to 0 before the
+                                                             user can press the
+                                                             button, branches t
+                                                            o losing phase
+  333 000001A0 D0FE            BEQ              losingLeds
+  334 000001A2 F04F 0300       LDR              R3,=0x0     ;Load in a 0 so tha
+                                                            t it checks it ever
+                                                            ytime
+  335 000001A6 4E78            LDR              R6,= GPIOB_IDR ;Port B 8 and 9
+  336 000001A8 6830            LDR              R0,[R6]
+  337 000001AA F44F 7180       LDR              R1,= 0x00000100
+  338 000001AE EA00 0001       AND              R0,R1
+  339 000001B2 EA4F 2010       LSR              R0,#8
+  340 000001B6 EA43 0300       ORR              R3,R0
+  341 000001BA 2B01            CMP              R3,#0x1
+  342 000001BC D0ED            BEQ              user1B      ;The wrong button w
+                                                            as pressed or no bu
+                                                            ttons so repeat loo
+                                                            p
+  343 000001BE 2B00            CMP              R3,#0x0     ;If the proper butt
+                                                            on was pressed bran
+                                                            ch back to randomLo
+                                                            op for the next LED
+                                                             to turn on
+  344 000001C0 D085            BEQ              randomLoop
+  345 000001C2         
+  346 000001C2         user2B
+  347 000001C2 EBA2 020C       SUB              R2,R12
+  348 000001C6 2A00            CMP              R2,#0x0
+  349 000001C8 D0FE            BEQ              losingLeds
+  350 000001CA F04F 0300       LDR              R3,=0x0
+  351 000001CE 4E6E            LDR              R6,= GPIOB_IDR ;Port B 8 and 9
+  352 000001D0 6830            LDR              R0,[R6]
+  353 000001D2 F44F 7100       LDR              R1,= 0x00000200
+  354 000001D6 EA00 0001       AND              R0,R1
+  355 000001DA EA4F 2050       LSR              R0,#9
+  356 000001DE EA43 0300       ORR              R3,R0
+  357 000001E2 2B01            CMP              R3,#0x1
+  358 000001E4 D0ED            BEQ              user2B
+  359 000001E6 2B00            CMP              R3,#0x0
+  360 000001E8 F43F AF71       BEQ              randomLoop
+  361 000001EC         
+  362 000001EC         user3B
+  363 000001EC EBA2 020C       SUB              R2,R12
+  364 000001F0 2A00            CMP              R2,#0x0
+  365 000001F2 D0FE            BEQ              losingLeds
+  366 000001F4 F04F 0300       LDR              R3,=0x0
+  367 000001F8 4E64            LDR              R6,= GPIOC_IDR ;Port C 12
+  368 000001FA 6830            LDR              R0,[R6]
+  369 000001FC F44F 5180       LDR              R1,= 0x00001000
+  370 00000200 EA00 0001       AND              R0,R1
+  371 00000204 EA4F 3010       LSR              R0,#12
+  372 00000208 EA43 0300       ORR              R3,R0
+  373 0000020C 2B01            CMP              R3,#0x1
+  374 0000020E D0ED            BEQ              user3B
+  375 00000210 2B00            CMP              R3,#0x0
+  376 00000212 F43F AF5C       BEQ              randomLoop
+
+
+
+ARM Macro Assembler    Page 12 
+
+
+  377 00000216         
+  378 00000216         user4B
+  379 00000216 EBA2 020C       SUB              R2,R12
+  380 0000021A 2A00            CMP              R2,#0x0
+  381 0000021C D0FE            BEQ              losingLeds
+  382 0000021E F04F 0300       LDR              R3,=0x0
+  383 00000222 4E5B            LDR              R6,= GPIOA_IDR ;Port A 5
+  384 00000224 6830            LDR              R0,[R6]
+  385 00000226 F04F 0120       LDR              R1,= 0x00000020
+  386 0000022A EA00 0001       AND              R0,R1
+  387 0000022E EA4F 1050       LSR              R0,#5
+  388 00000232 EA43 0300       ORR              R3,R0
+  389 00000236 2B01            CMP              R3,#0x1
+  390 00000238 D0ED            BEQ              user4B
+  391 0000023A 2B00            CMP              R3,#0x0
+  392 0000023C F43F AF47       BEQ              randomLoop
+  393 00000240         doneRandom
+  394 00000240 4770            BX               LR
+  395 00000242                 ENDP
+  396 00000242         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                       ;;;;;;;;
+  397 00000242         ;;; Changes LEDs during to show the binary result of pro
+                       fficiency level the user failed at then returns to waiti
+                       ng phase
+  398 00000242         ;;; Require:
+  399 00000242         ;;; R4: Used as a counter to increment LED sequence
+  400 00000242         ;;; R5: Counter to get a random generated number for the
+                        LED game sequence
+  401 00000242         ;;; R6: Load in the Input address of the pushbuttons in 
+                       this register
+  402 00000242         ;;; R7: Load in the value to clear and set certain LEDs
+  403 00000242         ;;; R11: Load in 0 then use as a counter register for ho
+                       w many times to show winning LED sequence
+  404 00000242         ;;; R10: Used as delay loop register
+  405 00000242         ;;; Promise:
+  406 00000242         ;;; returns a value in R6: this value is whether the LED
+                       s are on or off
+  407 00000242         ;;;
+  408 00000242         ;;; Modifies:
+  409 00000242         ;;; R11, R7, R12  
+  410 00000242 00 00           ALIGN
+  411 00000244         losingLeds
+                               PROC
+  412 00000244 F04F 0B00       LDR              R11,=0x0    ;Restart counter in
+                                                             R11
+  413 00000248 EA4F 2C4C       LSL              R12,#9      ;Shift user proffic
+                                                            iency level over so
+                                                             that the bits alig
+                                                            n with the corrspon
+                                                            ding LED bits
+  414 0000024C         
+  415 0000024C         caseL1
+  416 0000024C 4E44            LDR              R6, = GPIOA_ODR
+  417 0000024E 6837            LDR              R7,[R6]
+  418 00000250 F087 37FF       EOR              R7,#0xFFFFFFFF ;Display user pr
+                                                            officiency level he
+                                                            re
+  419 00000254 F427 57F0       AND              R7,#0xFFFFE1FF
+  420 00000258 EA47 070C       ORR              R7,R12
+
+
+
+ARM Macro Assembler    Page 13 
+
+
+  421 0000025C F087 37FF       EOR              R7,#0xFFFFFFFF
+  422 00000260 6037            STR              R7,[R6]
+  423 00000262 F10B 0B01       ADD              R11,#0x1
+  424 00000266 F7FF FFFE       BL               delay2
+  425 0000026A         
+  426 0000026A         caseL2
+  427 0000026A 4E3D            LDR              R6, = GPIOA_ODR
+  428 0000026C 6837            LDR              R7,[R6]
+  429 0000026E F087 37FF       EOR              R7,#0xFFFFFFFF ;Have all lights
+                                                             shut off in second
+                                                             case so that LEDs 
+                                                            flash in binary seq
+                                                            uence for the playe
+                                                            rs profficiency lev
+                                                            el
+  430 00000272 F427 57F0       AND              R7,#0xFFFFE1FF
+  431 00000276 F047 0700       ORR              R7,#0x0000
+  432 0000027A F087 37FF       EOR              R7,#0xFFFFFFFF
+  433 0000027E 6037            STR              R7,[R6]
+  434 00000280 F7FF FFFE       BL               delay2      ;Delay so that ligh
+                                                            ts stay off long en
+                                                            ough for the eye to
+                                                             see
+  435 00000284 F1BB 0F05       CMP              R11,#0x5
+  436 00000288 D1E0            BNE              caseL1      ;Repeat the loop is
+                                                             the count has not 
+                                                            been reached yet
+  437 0000028A         
+  438 0000028A E6C3            B                waitLoop    ;Go back to waiting
+                                                             phase if count has
+                                                             been reached
+  439 0000028C         
+  440 0000028C 4770            BX               LR
+  441 0000028E                 ENDP
+  442 0000028E         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                       ;;;;;;;;
+  443 0000028E         ;;; Changes LEDs to show winning sequence then waits for
+                        user input to restart or approximately 1 minute
+  444 0000028E         ;;; Require:
+  445 0000028E         ;;; R4: Used as a counter to increment LED sequence
+  446 0000028E         ;;; R5: Counter to get a random generated number for the
+                        LED game sequence
+  447 0000028E         ;;; R6: Load in the Input address of the pushbuttons in 
+                       this register
+  448 0000028E         ;;; R7: Load in the value to clear and set certain LEDs
+  449 0000028E         ;;; R11: Load in 0 then use as a counter register for ho
+                       w many times to show winning LED sequence
+  450 0000028E         ;;; R10: Used as delay loop register
+  451 0000028E         ;;; Promise:
+  452 0000028E         ;;; returns a value in R6: this value is whether the LED
+                       s are on or off
+  453 0000028E         ;;;
+  454 0000028E         ;;; Modifies:
+  455 0000028E         ;;; R11, R10, R3, R0, R1  
+  456 0000028E 00 00           ALIGN
+  457 00000290         winningLeds
+                               PROC
+  458 00000290 F04F 0B00       LDR              R11, = 0x0  ;Loads in 0 into R1
+                                                            1 to set an empty r
+
+
+
+ARM Macro Assembler    Page 14 
+
+
+                                                            egister
+  459 00000294         
+  460 00000294         case1W
+  461 00000294 4E32            LDR              R6, = GPIOA_ODR ;Port A 9
+  462 00000296 6837            LDR              R7,[R6]     ;Load that address 
+                                                            into another regist
+                                                            er
+  463 00000298 F087 37FF       EOR              R7,#0xFFFFFFFF
+  464 0000029C F427 57F0       AND              R7,#0xFFFFE1FF
+  465 000002A0 F447 5790       ORR              R7,#0x1200
+  466 000002A4 F087 37FF       EOR              R7,#0xFFFFFFFF ;R7 used to clea
+                                                            r and set bits need
+                                                            ed to turn on the l
+                                                            ight
+  467 000002A8 6037            STR              R7,[R6]
+  468 000002AA F7FF FFFE       BL               delay2      ;Branch to delay so
+                                                             that the specific 
+                                                            lights remain visib
+                                                            le for a set time p
+                                                            eriod
+  469 000002AE         
+  470 000002AE         case2W
+  471 000002AE 4E2C            LDR              R6, = GPIOA_ODR ;Port A 10
+  472 000002B0 6837            LDR              R7,[R6]     ;Load that address 
+                                                            into another regist
+                                                            er
+  473 000002B2 F087 37FF       EOR              R7,#0xFFFFFFFF
+  474 000002B6 F427 57F0       AND              R7,#0xFFFFE1FF
+  475 000002BA F447 6740       ORR              R7,#0x0C00
+  476 000002BE F087 37FF       EOR              R7,#0xFFFFFFFF ;R7 used to clea
+                                                            r and set bits need
+                                                            ed to turn on the l
+                                                            ight
+  477 000002C2 6037            STR              R7,[R6]
+  478 000002C4 F10B 0B01       ADD              R11,#0x1    ;Increment R11 coun
+                                                            t for how many cycl
+                                                            es the winning ligh
+                                                            ts rotate for
+  479 000002C8 F7FF FFFE       BL               delay2      ;Branch to delay so
+                                                             that the specific 
+                                                            lights remain visib
+                                                            le for a set time p
+                                                            eriod
+  480 000002CC F1BB 0F05       CMP              R11,#0x5    ;Compare the count 
+                                                            register to 7 becau
+                                                            se I wanted 5 cycle
+                                                            s before showing th
+                                                            e players profficie
+                                                            ncy level
+  481 000002D0 D1E0            BNE              case1W      ;If the count is no
+                                                            t 5 branch back to 
+                                                            the previous case s
+                                                            o that the lights r
+                                                            otate
+  482 000002D2         
+  483 000002D2         
+  484 000002D2         case3W
+  485 000002D2 4E23            LDR              R6, = GPIOA_ODR ;Port A 11
+  486 000002D4 6837            LDR              R7,[R6]     ;Load that address 
+
+
+
+ARM Macro Assembler    Page 15 
+
+
+                                                            into another regist
+                                                            er
+  487 000002D6 F087 37FF       EOR              R7,#0xFFFFFFFF
+  488 000002DA F427 57F0       AND              R7,#0xFFFFE1FF
+  489 000002DE F467 57F0       ORR              R7,#0xFFFFE1FF ;R7 used to clea
+                                                            r and set bits need
+                                                            ed to turn on the l
+                                                            ight
+  490 000002E2 F087 37FF       EOR              R7,#0xFFFFFFFF
+  491 000002E6 6037            STR              R7,[R6]
+  492 000002E8         
+  493 000002E8 F7FF FFFE       BL               delay2      ;Branch to delay ag
+                                                            ain to have lights 
+                                                            remain on for set t
+                                                            ime
+  494 000002EC F44F 5A5C       LDR              R10, = 0x3700 ;Approximately 1 
+                                                            minute delay if no 
+                                                            buttons are pressed
+                                                             before returning t
+                                                            o waiting(UC2) phas
+                                                            e
+  495 000002F0         
+  496 000002F0 4E1B            LDR              R6, = GPIOA_ODR ;Port A 12
+  497 000002F2 6837            LDR              R7,[R6]     ;Load that address 
+                                                            into another regist
+                                                            er
+  498 000002F4 F087 37FF       EOR              R7,#0xFFFFFFFF
+  499 000002F8 F427 57F0       AND              R7,#0xFFFFE1FF
+  500 000002FC F047 37FF       ORR              R7,#0xFFFFFFFF ;orr with whatev
+                                                            er level they finis
+                                                            hed at
+  501 00000300 F087 37FF       EOR              R7,#0xFFFFFFFF
+  502 00000304 6037            STR              R7,[R6]
+  503 00000306         case4W
+  504 00000306         
+  505 00000306 F1AA 0A01       SUB              R10,#0x1    ;Subtract delay cou
+                                                            nt in order to show
+                                                             profficiency level
+                                                             for approximately 
+                                                            1 minute
+  506 0000030A         
+  507 0000030A F7FF FFFE       BL               delay3      ;Branch to delay su
+                                                            broutine
+  508 0000030E         
+  509 0000030E F04F 0300       LDR              R3,=0x0
+  510 00000312         
+  511 00000312 4E1D            LDR              R6,= GPIOB_IDR ;Port B 8 and 9
+  512 00000314 6830            LDR              R0,[R6]
+  513 00000316 F44F 7140       LDR              R1,= 0x00000300
+  514 0000031A EA00 0001       AND              R0,R1
+  515 0000031E EA4F 2010       LSR              R0,#8
+  516 00000322 EA43 0300       ORR              R3,R0
+  517 00000326         
+  518 00000326 4E19            LDR              R6,= GPIOC_IDR ;Port C 12
+  519 00000328 6830            LDR              R0,[R6]
+  520 0000032A F44F 5180       LDR              R1,= 0x00001000 ;;These three g
+                                                            roupings determines
+                                                             if any buttons are
+                                                             pressed while show
+
+
+
+ARM Macro Assembler    Page 16 
+
+
+                                                            ing the profficienc
+                                                            y level
+  521 0000032E EA00 0001       AND              R0,R1
+  522 00000332 EA4F 2090       LSR              R0,#10
+  523 00000336 EA43 0300       ORR              R3,R0
+  524 0000033A         
+  525 0000033A 4E15            LDR              R6,= GPIOA_IDR ;Port A 5
+  526 0000033C 6830            LDR              R0,[R6]
+  527 0000033E F04F 0120       LDR              R1,= 0x00000020
+  528 00000342 EA00 0001       AND              R0,R1
+  529 00000346 EA4F 0090       LSR              R0,#2
+  530 0000034A EA43 0300       ORR              R3,R0
+  531 0000034E         
+  532 0000034E 2B0F            CMP              R3,#0xF
+  533 00000350         
+  534 00000350 F47F AE60       BNE              waitLoop    ;If any button is p
+                                                            ressed, start anoth
+                                                            er new game
+  535 00000354         
+  536 00000354 F1BA 0F00       CMP              R10,#0x0
+  537 00000358 D1D5            BNE              case4W      ;If the time runs o
+                                                            ut go back to waiti
+                                                            ng phase
+  538 0000035A         
+  539 0000035A E65B            B                waitLoop
+  540 0000035C         
+  541 0000035C 4770            BX               LR
+  542 0000035E 00 00 4001080C 
+              000C3500 
+              40021018 
+              40010804 
+              FFF0000F 
+              00033330 
+              00061A80 
+              0019660D 
+              3C6EF35F 
+              00111111 
+              40010C08 
+              40011008 
+              40010808         LTORG
+  543 00000394                 ENDP
+  544 00000394         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                       ;;;;;;;;
+  545 00000394         ;;; Changes LEDs during waiting phase
+  546 00000394         ;;; Require:
+  547 00000394         ;;; R4: Used as a counter to increment LED sequence
+  548 00000394         ;;; R5: Counter to get a random generated number for the
+                        LED game sequence
+  549 00000394         ;;; R6: Load in the Input address of the pushbuttons in 
+                       this register
+  550 00000394         ;;; R7: Load in the value to clear and set certain LEDs
+  551 00000394         ;;; Promise:
+  552 00000394         ;;; returns a value in R6: which turns on a specific LED
+                       
+  553 00000394         ;;;
+  554 00000394         ;;; Modifies:
+  555 00000394         ;;; R4, R5 
+  556 00000394                 ALIGN
+  557 00000394         waitingLeds
+
+
+
+ARM Macro Assembler    Page 17 
+
+
+                               PROC
+  558 00000394         
+  559 00000394 F205 5555       ADD              R5, #0x555  ;R5 used as registe
+                                                            r to increment for 
+                                                            random seed later u
+                                                            sed in the game
+  560 00000398 2C00            CMP              R4, #0x0    ;Compare register R
+                                                            4 count to determin
+                                                            e which LED should 
+                                                            be on
+  561 0000039A D005            BEQ              case1
+  562 0000039C 2C01            CMP              R4, #0x1
+  563 0000039E D011            BEQ              case2
+  564 000003A0 2C02            CMP              R4, #0x2
+  565 000003A2 D01D            BEQ              case3
+  566 000003A4 2C03            CMP              R4, #0x3
+  567 000003A6 D029            BEQ              case4
+  568 000003A8         case1
+  569 000003A8 4E31            LDR              R6, = GPIOA_ODR
+  570 000003AA 6837            LDR              R7,[R6]
+  571 000003AC F087 37FF       EOR              R7,#0xFFFFFFFF
+  572 000003B0 F427 57F0       AND              R7,#0xFFFFE1FF ;R7 used to clea
+                                                            r and set any bits 
+                                                            wanted
+  573 000003B4 F447 7700       ORR              R7,#0x0200
+  574 000003B8 F087 37FF       EOR              R7,#0xFFFFFFFF
+  575 000003BC 6037            STR              R7,[R6]
+  576 000003BE F104 0401       ADD              R4, #0x1
+  577 000003C2         
+  578 000003C2 4770            BX               LR
+  579 000003C4         
+  580 000003C4         case2
+  581 000003C4 4E2A            LDR              R6, = GPIOA_ODR
+  582 000003C6 6837            LDR              R7,[R6]
+  583 000003C8 F087 37FF       EOR              R7,#0xFFFFFFFF
+  584 000003CC F427 57F0       AND              R7,#0xFFFFE1FF
+  585 000003D0 F447 6780       ORR              R7,#0x0400  ;R7 used to clear a
+                                                            nd set any bits wan
+                                                            ted
+  586 000003D4 F087 37FF       EOR              R7,#0xFFFFFFFF
+  587 000003D8 6037            STR              R7,[R6]
+  588 000003DA F104 0401       ADD              R4, #0x1
+  589 000003DE         
+  590 000003DE 4770            BX               LR
+  591 000003E0         
+  592 000003E0         case3
+  593 000003E0 4E23            LDR              R6, = GPIOA_ODR
+  594 000003E2 6837            LDR              R7,[R6]
+  595 000003E4 F087 37FF       EOR              R7,#0xFFFFFFFF
+  596 000003E8 F427 57F0       AND              R7,#0xFFFFE1FF
+  597 000003EC F447 6700       ORR              R7,#0x0800  ;R7 used to clear a
+                                                            nd set any bits wan
+                                                            ted
+  598 000003F0 F087 37FF       EOR              R7,#0xFFFFFFFF
+  599 000003F4 6037            STR              R7,[R6]
+  600 000003F6 F104 0401       ADD              R4, #0x1
+  601 000003FA         
+  602 000003FA 4770            BX               LR
+  603 000003FC         
+
+
+
+ARM Macro Assembler    Page 18 
+
+
+  604 000003FC         case4
+  605 000003FC 4E1C            LDR              R6, = GPIOA_ODR
+  606 000003FE 6837            LDR              R7,[R6]
+  607 00000400 F087 37FF       EOR              R7,#0xFFFFFFFF
+  608 00000404 F427 57F0       AND              R7,#0xFFFFE1FF ;AND R7 by the c
+                                                            ompliment to clear 
+                                                            all the bits
+  609 00000408 F447 5780       ORR              R7,#0x1000  ;ORR R7 by the comp
+                                                            liment of 0xC to tu
+                                                            rn the bits on(acti
+                                                            ve low)
+  610 0000040C F087 37FF       EOR              R7,#0xFFFFFFFF
+  611 00000410 6037            STR              R7,[R6]
+  612 00000412 F04F 0400       LDR              R4,= 0x0
+  613 00000416         
+  614 00000416 4770            BX               LR
+  615 00000418                 ENDP
+  616 00000418         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                       ;;;;;;;;
+  617 00000418         ;;; Wait for user input(press of 1 of the 4 buttons)
+  618 00000418         ;;; Require:
+  619 00000418         ;;; R0: Used to clear then shift the bits being looked a
+                       t for button input
+  620 00000418         ;;; R3: Load in 0 initially then store if a button is pr
+                       essed in this register
+  621 00000418         ;;; R6: Load in the Input address of the pushbuttons in 
+                       this register
+  622 00000418         ;;; R1: Load in the value checking to see if a button is
+                        pushed into this register.
+  623 00000418         ;;; This will be ANDed with R0 which is then ORRed with 
+                       R3 to set the bits being looked at 
+  624 00000418         ;;; and then store if a button has been pushed
+  625 00000418         ;;; R10: Used as a delay loop register
+  626 00000418         ;;; Promise:
+  627 00000418         ;;; returns a value in R3: (F, if nothing is pushed, a d
+                       ifferent value if a button is pushed)
+  628 00000418         ;;;
+  629 00000418         ;;; Modifies:
+  630 00000418         ;;; R0, R1, R3, and R10 
+  631 00000418                 ALIGN
+  632 00000418         waitingButtons
+                               PROC
+  633 00000418 F84D AD04       PUSH{R10}
+  634 0000041C         buttonLoop
+  635 0000041C         
+  636 0000041C         
+  637 0000041C F04F 0300       LDR              R3,=0x0     ;Clear the R3 regis
+                                                            ter everytime
+  638 00000420         
+  639 00000420 4E14            LDR              R6,= GPIOB_IDR ;Port B 8 and 9
+  640 00000422 6830            LDR              R0,[R6]     ;Load that address 
+                                                            into another regist
+                                                            er
+  641 00000424 F44F 7140       LDR              R1,= 0x00000300 ;Load the hex v
+                                                            alue of the 300 to 
+                                                            check and see if ei
+                                                            ther button 1 or 2 
+                                                            from the left are p
+                                                            ushed
+
+
+
+ARM Macro Assembler    Page 19 
+
+
+  642 00000428 EA00 0001       AND              R0,R1       ;Clear the bits I d
+                                                            ont want
+  643 0000042C EA4F 2010       LSR              R0,#8       ;Shift the bits ove
+                                                            r to the most right
+                                                             position(LSB)
+  644 00000430 EA43 0300       ORR              R3,R0       ;Set the bits I wan
+                                                            t into R3
+  645 00000434         
+  646 00000434 4E10            LDR              R6,= GPIOC_IDR ;Port C 12
+  647 00000436 6830            LDR              R0,[R6]     ;Load that address 
+                                                            into another regist
+                                                            er
+  648 00000438 F44F 5180       LDR              R1,= 0x00001000 ;Load the hex v
+                                                            alue of the 1000 to
+                                                             check and see if e
+                                                            ither button 3 from
+                                                             the left are pushe
+                                                            d
+  649 0000043C EA00 0001       AND              R0,R1       ;Clear the bits I d
+                                                            ont want
+  650 00000440 EA4F 2090       LSR              R0,#10      ;Shift the bits ove
+                                                            r to the most right
+                                                             position(LSB) the 
+                                                            is not already bein
+                                                            g used
+  651 00000444 EA43 0300       ORR              R3,R0       ;Set the bits I wan
+                                                            t into R3
+  652 00000448         
+  653 00000448 4E0C            LDR              R6,= GPIOA_IDR ;Port A 5
+  654 0000044A 6830            LDR              R0,[R6]     ;Load that address 
+                                                            into another regist
+                                                            er
+  655 0000044C F04F 0120       LDR              R1,= 0x00000020 ;Load the hex v
+                                                            alue of the 20 to c
+                                                            heck and see if eit
+                                                            her button 3 from t
+                                                            he left are pushed
+  656 00000450 EA00 0001       AND              R0,R1       ;Clear the bits I d
+                                                            ont want
+  657 00000454 EA4F 0090       LSR              R0,#2       ;Shift the bits ove
+                                                            r to the most right
+                                                             position(LSB) the 
+                                                            is not already bein
+                                                            g used
+  658 00000458 EA43 0300       ORR              R3,R0       ;Set the bits I wan
+                                                            t into R3
+  659 0000045C         
+  660 0000045C 2B0F            CMP              R3,#0xF     ;Compare all values
+                                                             in R3 to F to chec
+                                                            k if any of the but
+                                                            tons are being pres
+                                                            sed
+  661 0000045E         
+  662 0000045E D104            BNE              doneButtonLoop ;If not equal th
+                                                            at means the one of
+                                                             the buttons is pus
+                                                            hed therefore branc
+                                                            h out
+  663 00000460         
+
+
+
+ARM Macro Assembler    Page 20 
+
+
+  664 00000460 F1AA 0A01       SUB              R10,#1      ;Decrement my delay
+                                                             count
+  665 00000464 F1BA 0F00       CMP              R10,#0      ;Compare my delay c
+                                                            ount to 0 to know w
+                                                            hen to light up the
+                                                             next light
+  666 00000468         
+  667 00000468 D1D8            BNE              buttonLoop  ;If R10 is not equa
+                                                            l to 0 repeat the l
+                                                            oop so that the lig
+                                                            ht is on for a set 
+                                                            amount of time
+  668 0000046A         
+  669 0000046A         doneButtonLoop
+  670 0000046A F85D AB04       POP{R10}                     ;Get out of the loo
+                                                            p if a button is pr
+                                                            essed or when the d
+                                                            elay is 0 to go to 
+                                                            a different light
+  671 0000046E         
+  672 0000046E 4770            BX               LR
+  673 00000470                 ENDP
+  674 00000470         
+  675 00000470                 ALIGN
+  676 00000470                 END
+              4001080C 
+              40010C08 
+              40011008 
+              40010808 
+Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M3 --apcs=interw
+ork --depend=.\objects\project.d -o.\objects\project.o -I.\RTE\_Target_1 -IC:\K
+eil_v5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include -IC:\Keil_v5\ARM\CMSIS\
+Include --predefine="__EVAL SETA 1" --predefine="__UVISION_VERSION SETA 526" --
+predefine="STM32F10X_MD_VL SETA 1" --list=.\listings\project.lst Project.s
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+RESET 00000000
+
+Symbol: RESET
+   Definitions
+      At line 73 in file Project.s
+   Uses
+      None
+Comment: RESET unused
+__Vectors 00000000
+
+Symbol: __Vectors
+   Definitions
+      At line 76 in file Project.s
+   Uses
+      At line 74 in file Project.s
+Comment: __Vectors used once
+2 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+GPIO_ClockInit 0000008C
+
+Symbol: GPIO_ClockInit
+   Definitions
+      At line 182 in file Project.s
+   Uses
+      At line 85 in file Project.s
+Comment: GPIO_ClockInit used once
+GPIO_init 00000098
+
+Symbol: GPIO_init
+   Definitions
+      At line 198 in file Project.s
+   Uses
+      At line 86 in file Project.s
+Comment: GPIO_init used once
+MYCODE 00000000
+
+Symbol: MYCODE
+   Definitions
+      At line 79 in file Project.s
+   Uses
+      None
+Comment: MYCODE unused
+Reset_Handler 00000000
+
+Symbol: Reset_Handler
+   Definitions
+      At line 83 in file Project.s
+   Uses
+      At line 77 in file Project.s
+      At line 80 in file Project.s
+
+buttonLoop 0000041C
+
+Symbol: buttonLoop
+   Definitions
+      At line 634 in file Project.s
+   Uses
+      At line 176 in file Project.s
+      At line 667 in file Project.s
+
+case1 000003A8
+
+Symbol: case1
+   Definitions
+      At line 568 in file Project.s
+   Uses
+      At line 561 in file Project.s
+Comment: case1 used once
+case1W 00000294
+
+Symbol: case1W
+   Definitions
+      At line 460 in file Project.s
+   Uses
+      At line 481 in file Project.s
+Comment: case1W used once
+case2 000003C4
+
+
+
+ARM Macro Assembler    Page 2 Alphabetic symbol ordering
+Relocatable symbols
+
+
+Symbol: case2
+   Definitions
+      At line 580 in file Project.s
+   Uses
+      At line 563 in file Project.s
+Comment: case2 used once
+case2W 000002AE
+
+Symbol: case2W
+   Definitions
+      At line 470 in file Project.s
+   Uses
+      None
+Comment: case2W unused
+case3 000003E0
+
+Symbol: case3
+   Definitions
+      At line 592 in file Project.s
+   Uses
+      At line 565 in file Project.s
+Comment: case3 used once
+case3W 000002D2
+
+Symbol: case3W
+   Definitions
+      At line 484 in file Project.s
+   Uses
+      None
+Comment: case3W unused
+case4 000003FC
+
+Symbol: case4
+   Definitions
+      At line 604 in file Project.s
+   Uses
+      At line 567 in file Project.s
+Comment: case4 used once
+case4W 00000306
+
+Symbol: case4W
+   Definitions
+      At line 503 in file Project.s
+   Uses
+      At line 537 in file Project.s
+Comment: case4W used once
+caseL1 0000024C
+
+Symbol: caseL1
+   Definitions
+      At line 415 in file Project.s
+   Uses
+      At line 436 in file Project.s
+Comment: caseL1 used once
+caseL2 0000026A
+
+Symbol: caseL2
+   Definitions
+
+
+
+ARM Macro Assembler    Page 3 Alphabetic symbol ordering
+Relocatable symbols
+
+      At line 426 in file Project.s
+   Uses
+      None
+Comment: caseL2 unused
+delay 00000074
+
+Symbol: delay
+   Definitions
+      At line 163 in file Project.s
+   Uses
+      At line 242 in file Project.s
+Comment: delay used once
+delay2 00000060
+
+Symbol: delay2
+   Definitions
+      At line 145 in file Project.s
+   Uses
+      At line 263 in file Project.s
+      At line 424 in file Project.s
+      At line 434 in file Project.s
+      At line 468 in file Project.s
+      At line 479 in file Project.s
+      At line 493 in file Project.s
+
+delay3 00000048
+
+Symbol: delay3
+   Definitions
+      At line 127 in file Project.s
+   Uses
+      At line 507 in file Project.s
+Comment: delay3 used once
+delayLoop 00000078
+
+Symbol: delayLoop
+   Definitions
+      At line 165 in file Project.s
+   Uses
+      At line 172 in file Project.s
+Comment: delayLoop used once
+delayLoop2 00000064
+
+Symbol: delayLoop2
+   Definitions
+      At line 147 in file Project.s
+   Uses
+      At line 154 in file Project.s
+Comment: delayLoop2 used once
+delayLoop3 0000004C
+
+Symbol: delayLoop3
+   Definitions
+      At line 129 in file Project.s
+   Uses
+      At line 136 in file Project.s
+Comment: delayLoop3 used once
+doneButtonLoop 0000046A
+
+
+
+
+ARM Macro Assembler    Page 4 Alphabetic symbol ordering
+Relocatable symbols
+
+Symbol: doneButtonLoop
+   Definitions
+      At line 669 in file Project.s
+   Uses
+      At line 662 in file Project.s
+Comment: doneButtonLoop used once
+doneDelay 00000084
+
+Symbol: doneDelay
+   Definitions
+      At line 174 in file Project.s
+   Uses
+      At line 169 in file Project.s
+Comment: doneDelay used once
+doneDelay2 00000070
+
+Symbol: doneDelay2
+   Definitions
+      At line 156 in file Project.s
+   Uses
+      At line 151 in file Project.s
+Comment: doneDelay2 used once
+doneDelay3 00000058
+
+Symbol: doneDelay3
+   Definitions
+      At line 138 in file Project.s
+   Uses
+      At line 133 in file Project.s
+Comment: doneDelay3 used once
+doneRandom 00000240
+
+Symbol: doneRandom
+   Definitions
+      At line 393 in file Project.s
+   Uses
+      None
+Comment: doneRandom unused
+losingLeds 00000244
+
+Symbol: losingLeds
+   Definitions
+      At line 411 in file Project.s
+   Uses
+      At line 333 in file Project.s
+      At line 349 in file Project.s
+      At line 365 in file Project.s
+      At line 381 in file Project.s
+
+mainGame 000000AC
+
+Symbol: mainGame
+   Definitions
+      At line 231 in file Project.s
+   Uses
+      At line 110 in file Project.s
+Comment: mainGame used once
+mainLoop 00000042
+
+
+
+
+ARM Macro Assembler    Page 5 Alphabetic symbol ordering
+Relocatable symbols
+
+Symbol: mainLoop
+   Definitions
+      At line 117 in file Project.s
+   Uses
+      At line 120 in file Project.s
+      At line 254 in file Project.s
+
+random1 00000120
+
+Symbol: random1
+   Definitions
+      At line 273 in file Project.s
+   Uses
+      At line 266 in file Project.s
+Comment: random1 used once
+random2 0000013E
+
+Symbol: random2
+   Definitions
+      At line 287 in file Project.s
+   Uses
+      At line 268 in file Project.s
+Comment: random2 used once
+random3 0000015C
+
+Symbol: random3
+   Definitions
+      At line 301 in file Project.s
+   Uses
+      At line 270 in file Project.s
+Comment: random3 used once
+random4 0000017A
+
+Symbol: random4
+   Definitions
+      At line 315 in file Project.s
+   Uses
+      At line 272 in file Project.s
+Comment: random4 used once
+randomLoop 000000CE
+
+Symbol: randomLoop
+   Definitions
+      At line 244 in file Project.s
+   Uses
+      At line 328 in file Project.s
+      At line 344 in file Project.s
+      At line 360 in file Project.s
+      At line 376 in file Project.s
+      At line 392 in file Project.s
+
+user1B 0000019A
+
+Symbol: user1B
+   Definitions
+      At line 330 in file Project.s
+   Uses
+      At line 283 in file Project.s
+      At line 342 in file Project.s
+
+
+
+ARM Macro Assembler    Page 6 Alphabetic symbol ordering
+Relocatable symbols
+
+
+user2B 000001C2
+
+Symbol: user2B
+   Definitions
+      At line 346 in file Project.s
+   Uses
+      At line 297 in file Project.s
+      At line 358 in file Project.s
+
+user3B 000001EC
+
+Symbol: user3B
+   Definitions
+      At line 362 in file Project.s
+   Uses
+      At line 311 in file Project.s
+      At line 374 in file Project.s
+
+user4B 00000216
+
+Symbol: user4B
+   Definitions
+      At line 378 in file Project.s
+   Uses
+      At line 325 in file Project.s
+      At line 390 in file Project.s
+
+userWaitLoop 0000003E
+
+Symbol: userWaitLoop
+   Definitions
+      At line 112 in file Project.s
+   Uses
+      At line 114 in file Project.s
+Comment: userWaitLoop used once
+waitLoop 00000014
+
+Symbol: waitLoop
+   Definitions
+      At line 92 in file Project.s
+   Uses
+      At line 108 in file Project.s
+      At line 438 in file Project.s
+      At line 534 in file Project.s
+      At line 539 in file Project.s
+
+waitingButtons 00000418
+
+Symbol: waitingButtons
+   Definitions
+      At line 632 in file Project.s
+   Uses
+      At line 97 in file Project.s
+Comment: waitingButtons used once
+waitingLeds 00000394
+
+Symbol: waitingLeds
+   Definitions
+
+
+
+ARM Macro Assembler    Page 7 Alphabetic symbol ordering
+Relocatable symbols
+
+      At line 557 in file Project.s
+   Uses
+      At line 95 in file Project.s
+Comment: waitingLeds used once
+winningLeds 00000290
+
+Symbol: winningLeds
+   Definitions
+      At line 457 in file Project.s
+   Uses
+      At line 118 in file Project.s
+Comment: winningLeds used once
+43 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Absolute symbols
+
+DELAYTIME 00002328
+
+Symbol: DELAYTIME
+   Definitions
+      At line 64 in file Project.s
+   Uses
+      At line 93 in file Project.s
+Comment: DELAYTIME used once
+ENDTIME 003D0900
+
+Symbol: ENDTIME
+   Definitions
+      At line 65 in file Project.s
+   Uses
+      None
+Comment: ENDTIME unused
+GPIOA_BRR 40010814
+
+Symbol: GPIOA_BRR
+   Definitions
+      At line 21 in file Project.s
+   Uses
+      None
+Comment: GPIOA_BRR unused
+GPIOA_BSRR 40010810
+
+Symbol: GPIOA_BSRR
+   Definitions
+      At line 20 in file Project.s
+   Uses
+      None
+Comment: GPIOA_BSRR unused
+GPIOA_CRH 40010804
+
+Symbol: GPIOA_CRH
+   Definitions
+      At line 17 in file Project.s
+   Uses
+      At line 201 in file Project.s
+Comment: GPIOA_CRH used once
+GPIOA_CRL 40010800
+
+Symbol: GPIOA_CRL
+   Definitions
+      At line 16 in file Project.s
+   Uses
+      None
+Comment: GPIOA_CRL unused
+GPIOA_IDR 40010808
+
+Symbol: GPIOA_IDR
+   Definitions
+      At line 18 in file Project.s
+   Uses
+      At line 383 in file Project.s
+      At line 525 in file Project.s
+      At line 653 in file Project.s
+
+GPIOA_LCKR 40010818
+
+
+
+ARM Macro Assembler    Page 2 Alphabetic symbol ordering
+Absolute symbols
+
+
+Symbol: GPIOA_LCKR
+   Definitions
+      At line 22 in file Project.s
+   Uses
+      None
+Comment: GPIOA_LCKR unused
+GPIOA_ODR 4001080C
+
+Symbol: GPIOA_ODR
+   Definitions
+      At line 19 in file Project.s
+   Uses
+      At line 100 in file Project.s
+      At line 233 in file Project.s
+      At line 245 in file Project.s
+      At line 274 in file Project.s
+      At line 288 in file Project.s
+      At line 302 in file Project.s
+      At line 316 in file Project.s
+      At line 416 in file Project.s
+      At line 427 in file Project.s
+      At line 461 in file Project.s
+      At line 471 in file Project.s
+      At line 485 in file Project.s
+      At line 496 in file Project.s
+      At line 569 in file Project.s
+      At line 581 in file Project.s
+      At line 593 in file Project.s
+      At line 605 in file Project.s
+
+GPIOB_BRR 40010C14
+
+Symbol: GPIOB_BRR
+   Definitions
+      At line 30 in file Project.s
+   Uses
+      None
+Comment: GPIOB_BRR unused
+GPIOB_BSRR 40010C10
+
+Symbol: GPIOB_BSRR
+   Definitions
+      At line 29 in file Project.s
+   Uses
+      None
+Comment: GPIOB_BSRR unused
+GPIOB_CRH 40010C04
+
+Symbol: GPIOB_CRH
+   Definitions
+      At line 26 in file Project.s
+   Uses
+      None
+Comment: GPIOB_CRH unused
+GPIOB_CRL 40010C00
+
+Symbol: GPIOB_CRL
+   Definitions
+
+
+
+ARM Macro Assembler    Page 3 Alphabetic symbol ordering
+Absolute symbols
+
+      At line 25 in file Project.s
+   Uses
+      None
+Comment: GPIOB_CRL unused
+GPIOB_IDR 40010C08
+
+Symbol: GPIOB_IDR
+   Definitions
+      At line 27 in file Project.s
+   Uses
+      At line 335 in file Project.s
+      At line 351 in file Project.s
+      At line 511 in file Project.s
+      At line 639 in file Project.s
+
+GPIOB_LCKR 40010C18
+
+Symbol: GPIOB_LCKR
+   Definitions
+      At line 31 in file Project.s
+   Uses
+      None
+Comment: GPIOB_LCKR unused
+GPIOB_ODR 40010C0C
+
+Symbol: GPIOB_ODR
+   Definitions
+      At line 28 in file Project.s
+   Uses
+      None
+Comment: GPIOB_ODR unused
+GPIOC_BRR 40011014
+
+Symbol: GPIOC_BRR
+   Definitions
+      At line 40 in file Project.s
+   Uses
+      None
+Comment: GPIOC_BRR unused
+GPIOC_BSRR 40011010
+
+Symbol: GPIOC_BSRR
+   Definitions
+      At line 39 in file Project.s
+   Uses
+      None
+Comment: GPIOC_BSRR unused
+GPIOC_CRH 40011004
+
+Symbol: GPIOC_CRH
+   Definitions
+      At line 36 in file Project.s
+   Uses
+      None
+Comment: GPIOC_CRH unused
+GPIOC_CRL 40011000
+
+Symbol: GPIOC_CRL
+   Definitions
+
+
+
+ARM Macro Assembler    Page 4 Alphabetic symbol ordering
+Absolute symbols
+
+      At line 35 in file Project.s
+   Uses
+      None
+Comment: GPIOC_CRL unused
+GPIOC_IDR 40011008
+
+Symbol: GPIOC_IDR
+   Definitions
+      At line 37 in file Project.s
+   Uses
+      At line 367 in file Project.s
+      At line 518 in file Project.s
+      At line 646 in file Project.s
+
+GPIOC_LCKR 40011018
+
+Symbol: GPIOC_LCKR
+   Definitions
+      At line 41 in file Project.s
+   Uses
+      None
+Comment: GPIOC_LCKR unused
+GPIOC_ODR 4001100C
+
+Symbol: GPIOC_ODR
+   Definitions
+      At line 38 in file Project.s
+   Uses
+      None
+Comment: GPIOC_ODR unused
+INITIAL_MSP 20001000
+
+Symbol: INITIAL_MSP
+   Definitions
+      At line 12 in file Project.s
+   Uses
+      At line 76 in file Project.s
+Comment: INITIAL_MSP used once
+RCC_AHBENR 40021014
+
+Symbol: RCC_AHBENR
+   Definitions
+      At line 50 in file Project.s
+   Uses
+      None
+Comment: RCC_AHBENR unused
+RCC_APB1ENR 4002101C
+
+Symbol: RCC_APB1ENR
+   Definitions
+      At line 54 in file Project.s
+   Uses
+      None
+Comment: RCC_APB1ENR unused
+RCC_APB1RSTR 40021010
+
+Symbol: RCC_APB1RSTR
+   Definitions
+      At line 49 in file Project.s
+
+
+
+ARM Macro Assembler    Page 5 Alphabetic symbol ordering
+Absolute symbols
+
+   Uses
+      None
+Comment: RCC_APB1RSTR unused
+RCC_APB2ENR 40021018
+
+Symbol: RCC_APB2ENR
+   Definitions
+      At line 52 in file Project.s
+   Uses
+      At line 187 in file Project.s
+Comment: RCC_APB2ENR used once
+RCC_APB2RSTR 4002100C
+
+Symbol: RCC_APB2RSTR
+   Definitions
+      At line 48 in file Project.s
+   Uses
+      None
+Comment: RCC_APB2RSTR unused
+RCC_BDCR 40021020
+
+Symbol: RCC_BDCR
+   Definitions
+      At line 55 in file Project.s
+   Uses
+      None
+Comment: RCC_BDCR unused
+RCC_CFGR 40021004
+
+Symbol: RCC_CFGR
+   Definitions
+      At line 46 in file Project.s
+   Uses
+      None
+Comment: RCC_CFGR unused
+RCC_CFGR2 4002102C
+
+Symbol: RCC_CFGR2
+   Definitions
+      At line 57 in file Project.s
+   Uses
+      None
+Comment: RCC_CFGR2 unused
+RCC_CIR 40021008
+
+Symbol: RCC_CIR
+   Definitions
+      At line 47 in file Project.s
+   Uses
+      None
+Comment: RCC_CIR unused
+RCC_CR 40021000
+
+Symbol: RCC_CR
+   Definitions
+      At line 45 in file Project.s
+   Uses
+      None
+Comment: RCC_CR unused
+
+
+
+ARM Macro Assembler    Page 6 Alphabetic symbol ordering
+Absolute symbols
+
+RCC_CSR 40021024
+
+Symbol: RCC_CSR
+   Definitions
+      At line 56 in file Project.s
+   Uses
+      None
+Comment: RCC_CSR unused
+RTC_CNTH 40002818
+
+Symbol: RTC_CNTH
+   Definitions
+      At line 59 in file Project.s
+   Uses
+      None
+Comment: RTC_CNTH unused
+a 0019660D
+
+Symbol: a
+   Definitions
+      At line 69 in file Project.s
+   Uses
+      At line 257 in file Project.s
+Comment: a used once
+c 3C6EF35F
+
+Symbol: c
+   Definitions
+      At line 70 in file Project.s
+   Uses
+      At line 258 in file Project.s
+Comment: c used once
+38 symbols
+420 symbols in table
